@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+gunicorn
+python-multipart
+requests
+pymupdf
+langchain
+langchain-groq
+langchain-community
+langchain-huggingface
+langchain-text-splitters
+faiss-cpu
+sentence-transformers
+python-dotenv
