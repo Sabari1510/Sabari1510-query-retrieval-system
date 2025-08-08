@@ -3,13 +3,11 @@ uvicorn
 gunicorn
 python-multipart
 requests
-pymupdf
+unstructured[pdf]
 langchain
-langchain-groq          
-langchain-google-genai  
+langchain-google-genai
 langchain-community
 langchain-huggingface
 langchain-text-splitters
 faiss-cpu
-sentence-transformers
 python-dotenv

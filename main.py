@@ -9,8 +9,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import Request, HTTPException
 
 # LangChain components
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_groq import ChatGroq
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable, RunnablePassthrough
@@ -26,8 +26,8 @@ async def lifespan(app: FastAPI):
     global rag_chain
     print("Application startup: Loading RAG chain...")
     try:
-        # Step 1: Initialize the lightweight Google embedding client
-        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+        # Step 1: Use the local HuggingFace model to load embeddings
+        embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
         
         # Step 2: Load the pre-built FAISS index from disk
         vectorstore = FAISS.load_local(
@@ -35,20 +35,23 @@ async def lifespan(app: FastAPI):
             embeddings,
             allow_dangerous_deserialization=True
         )
-        retriever = vectorstore.as_retriever(search_kwargs={'k': 2})
+        retriever = vectorstore.as_retriever(search_kwargs={'k': 4})
         
-        # Step 3: Set up the fast Groq LLM for answer generation
-        llm = ChatGroq(model_name="llama3-8b-8192", temperature=0)
+        # Step 3: Set up the Google Gemini LLM for answer generation
+        llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0)
         
         # Step 4: Create the final RAG chain
         prompt_template = """
-        You are a factual answering assistant. Your task is to answer the QUESTION based ONLY on the provided CONTEXT.
-        Your final answer MUST be concise and limited to a maximum of 3 sentences. First, state the most direct answer possible, then briefly state the main condition. Do not add extra information.
+        You are a highly diligent and precise AI assistant for answering questions about an insurance policy.
+        Your task is to answer the user's QUESTION based strictly on the provided CONTEXT sections.
+        Synthesize a concise and direct answer. If the information is not available, state that clearly.
+
         CONTEXT:
         ---
         {context}
         ---
         QUESTION: {question}
+
         PRECISE ANSWER:
         """
         prompt = ChatPromptTemplate.from_template(prompt_template)
@@ -59,9 +62,10 @@ async def lifespan(app: FastAPI):
     yield
     print("Application shutdown.")
 
+# --- FastAPI Application Setup ---
 app = FastAPI(
-    title="Stable Hybrid Query System (Groq + Google)", 
-    version="11.0.0", 
+    title="High-Accuracy Query System (Gemini)", 
+    version="14.0.0", 
     lifespan=lifespan
 )
 
@@ -80,6 +84,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
         raise HTTPException(status_code=403, detail="Invalid authorization token")
     return credentials
 
+# --- Main API Endpoint ---
 @app.post("/api/v1/hackrx/run", response_model=HackRxResponse, dependencies=[Depends(verify_token)], tags=["Submissions"])
 async def run_submission(request: HackRxRequest):
     if not rag_chain:
