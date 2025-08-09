@@ -1,20 +1,19 @@
 import os
+import requests
 from dotenv import load_dotenv
-from langchain_community.document_loaders import UnstructuredPDFLoader # We are now using this loader
+from langchain_community.document_loaders import UnstructuredPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 
 load_dotenv()
 
-# We will now use a local file path instead of a URL
-LOCAL_PDF_PATH = "policy.pdf"
+LOCAL_PDF_PATH = "policy.pdf" # Assumes you have downloaded the PDF manually
 FAISS_INDEX_PATH = "faiss_index"
 
 def build_index():
     print(f"Starting to build index from local file: {LOCAL_PDF_PATH}")
     
-    # MODIFIED: Load directly from the local PDF file
     loader = UnstructuredPDFLoader(LOCAL_PDF_PATH)
     docs = loader.load()
     

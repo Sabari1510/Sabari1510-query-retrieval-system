@@ -23,10 +23,14 @@ FAISS_INDEX_PATH = "faiss_index"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """
+    This function runs on application startup. It loads the pre-built
+    search index and sets up the RAG chain.
+    """
     global rag_chain
     print("Application startup: Loading RAG chain...")
     try:
-        # Step 1: Use the local HuggingFace model to load embeddings
+        # Step 1: Use the fast, local HuggingFace model for embeddings
         embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
         
         # Step 2: Load the pre-built FAISS index from disk
@@ -40,7 +44,7 @@ async def lifespan(app: FastAPI):
         # Step 3: Set up the Google Gemini LLM for answer generation
         llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0)
         
-        # Step 4: Create the final RAG chain
+        # Step 4: Create the final RAG chain with a high-accuracy prompt
         prompt_template = """
         You are a highly diligent and precise AI assistant for answering questions about an insurance policy.
         Your task is to answer the user's QUESTION based strictly on the provided CONTEXT sections.
@@ -99,3 +103,7 @@ async def run_submission(request: HackRxRequest):
             answers.append(f"Error processing question: {e}")
             
     return HackRxResponse(answers=answers)
+
+# This part is for running the app locally
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)

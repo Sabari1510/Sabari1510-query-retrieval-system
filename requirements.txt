@@ -10,4 +10,6 @@ langchain-community
 langchain-huggingface
 langchain-text-splitters
 faiss-cpu
+sentence-transformers
 python-dotenv
+poppler-utils
